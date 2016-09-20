@@ -3,7 +3,7 @@
 
 ## Yet Another Reinvented Getotp
 
-Yarg is a one-header-only C++11 object oriented replacement for getopt() and similar software.
+Yarg is a one-header-only C++11 object oriented replacement for `getopt()` and similar software.
 
 Support long options (`--help`), short options (`-h`), more short option in sequence (`-hvl`), options without values (flags) or with values, negative flags (`--verbose` and `--noverbose` bounded on the same flag) repeatable options (`--name foo --name=bar --name "foo bar"`).
 
