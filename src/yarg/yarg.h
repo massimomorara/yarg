@@ -48,7 +48,7 @@ namespace yarg
    // see https://github.com/massimomorara/yarg for latest version
    #define  Yarg_Version_Major  0
    #define  Yarg_Version_Minor  1
-   #define  Yarg_Version_Patch  0
+   #define  Yarg_Version_Patch  1
 
    template <typename X>
    X extractVal (std::string const & str)
@@ -511,8 +511,8 @@ namespace yarg
 
                static std::string const mm { "--" };
                static std::regex const
-                  rgxKey { "^--([^=]+)=(?:\"([^\"]*)\""
-                     "|\'([^\']*)\'|([^\"\'].+[^\"\']))$|^--([^=]*)$" };
+                  rgxKey { "^--([^=]+)=(?:(\'([^\']*)\')|(\"([^\"]*)\")"
+                     "|(.+))$|^--([^=]*)$" };
                static std::regex const
                   rgxValue { "^\"([^\"]*)\"$|^\'([^\']*)\'$|^(.+)$" };
 
@@ -662,3 +662,4 @@ namespace yarg
  }
 
 #endif // ndef __yarg_h__
+

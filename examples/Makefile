@@ -2,7 +2,7 @@
 # Copyright (c) 2016 massimo morara
 
 # Distributed under the Mit License
-# See accompanying file LICENSE.txt
+# See accompanying file LICENSE
 # See https://github.com/massimomorara/yarg for latest version
 
 CC        = clang++
@@ -21,3 +21,4 @@ clean:
 
 $(EXES):%: %.o Makefile	
 	$(CC) -o $@ $(LDFLAGS) $<
+

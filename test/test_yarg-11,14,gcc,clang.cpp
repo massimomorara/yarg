@@ -2,7 +2,7 @@
 // Copyright (c) 2016 massimo morara
 
 // Distributed under the Mit License
-// See accompanying file LICENSE.txt
+// See accompanying file LICENSE
 // See https://github.com/massimomorara/yarg for latest version
 
 #include "yarg/yarg.h"
@@ -542,3 +542,4 @@ TEST_CASE ( "yarg::yarg tests", "[yarg::yarg]" )
       CHECK ( operator==(a0, { "no-opts-1", "no-opts-2" }) );
     }
  }
+

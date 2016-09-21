@@ -2,7 +2,7 @@
 # Copyright (c) 2016 massimo morara
 
 # Distributed under the Mit License
-# See accompanying file LICENSE.txt
+# See accompanying file LICENSE
 # See https://github.com/massimomorara/yarg for latest version
 
 CPP_GCC   = g++
@@ -62,3 +62,4 @@ $(yargDependent): $(YARGH)
 
 %-14-clang.o: %-*14*clang*.cpp $(COMMON_DEPS)
 	$(CPP_CLANG) -o $@ $(CPPFLAGS_14_CLANG) $<
+

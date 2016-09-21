@@ -2,7 +2,7 @@
 // Copyright (c) 2016 massimo morara
 
 // Distributed under the Mit License
-// See accompanying file LICENSE.txt
+// See accompanying file LICENSE
 // See https://github.com/massimomorara/yarg for latest version
 
 #include <iostream>
@@ -103,3 +103,4 @@ int main (int argc, char * argv[])
 
    return ( errExit ? EXIT_FAILURE : EXIT_SUCCESS );
  }
+
