@@ -13,6 +13,7 @@ int main (int argc, char * argv[])
  {
    yarg::yarg  y;
 
+   // Attention: l is a *reference*
    auto & l = y.addOpt('l', "level", "set the level value", 3);
 
    if ( y.parse(argc, argv) )
