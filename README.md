@@ -3,9 +3,9 @@
 
 ## Yet Another Reinvented Getotp
 
-Yarg is a one-header-only C++11 object oriented replacement for `getopt()`.
+Yarg is a one-header-only C++11 replacement for `getopt()` that is object oriented and typed.
 
-Support long options (example: `--help`), short options (`-h`), more short options in sequence (`-hvl`), options without values (flags) or followed by a value, negative flags (`--verbose` and `--noverbose` bounded on the same flag), repeatable options (`--name foo --name=bar --name "foo bar"`) and the special `--` argument to stop the option recognition.
+Support long options (example: `--help`), short options (`-h`), more short options in sequence (`-hvl`), options without values (flags) or followed by a value, negative flags (`--verbose` and `--noverbose` bounded on the same flag), repeatable options (`--name foo --name=bar --name "foo bar"`), special `--` argument to stop the option recognition and automatic generation of usage/help message.
 
 Every option is associated with a specific type (`bool` for flags) and trying to assign a wrong type value (as in `--level three` when "level" is defined of type `int`) cause an error in the parsing phase.
 
@@ -29,6 +29,12 @@ int main (int argc, char * argv[])
 
    if ( y.parse(argc, argv) )
       std::cout << "level is " << l << std::endl;
+   else
+    {
+      std::cerr << std::endl << y.getParserError() << std::endl;
+
+      y.usage();
+    }
 
    return EXIT_SUCCESS;
  }
@@ -87,7 +93,7 @@ Argument description:
 
 + **shortOption** - a single char that set the short option; by example, pass `'h'` to activate the `-h` recognition; to exclude the use of short option, pass `0` (zero)
 + **longOption** - a string that set the long option, excluding the starting `--`; by example, pass `"help"` to activate `--help` recognition; to exclude the use of long option, pass `""` (empty string); if **revert** is `true` (only for flags) this value activate a double long option (see **revert**)
-+ **description** - a human understandable description of the option; an example: "show this help and exit"; intended for a future `getHelp()` method
++ **description** - a human understandable description of the option; an example: "show this help and exit"; used by `usage()`
 + **revert** - only for flags (`addFlag()` and `addFlagCont()`); if `true` and if a not empty **longOption** (see) is set, activate another long option (pre posing "no") to intercept a negative value; by example, if `true` and the long option is `"verbose"`, set to `true` the flag (or add a `true` flag in the container, when repeatable) when (a) `--verbose` argument is encountered and set to `false` the same flag (o add a `false` flag in the container, when repeatable) when (a) `--noverbose` argument is encountered
 + **defaultValue** - default value for the flag (or option) value (or container of values); can be used to set the template type (not in `addFlag()`, where is fixed to `bool`), otherwise is necessary to explicit it (se "option declaration examples")
 
@@ -154,11 +160,52 @@ if ( ! y.parse(argc, argv) )
 
 ### Program name
 
-After the parsing phase (without errors) you can get the name of the program (the classic `argv[0]` argument) using the method `getArgv0()`, that return a `std::string`.
+After the parsing phase, you can get the name of the program (the classic `argv[0]` argument) using the method `getArgv0()`, that return a `std::string`.
 
 ### Not options arguments
 
 After the parsing phase (without errors) you can get the not options values arguments list using the method `getNoOpts()` that return a `std::deque` of `std::string`.
+
+### Automatic usage/help message generation
+
+Yarg permits the printing of a usage/help message automatically generated using, mainly, the `description` argument of `addFlag()`, `addOpt()`, `addFlagCont()` and `addOptCont()` methods.
+
+By example, in the executable obtained from the minimal example that you can see in "Minimale example" section, the call to `usage()` print the following message
+
+```
+ Usage: ./yarg-example-001 [options] 
+
+ where options are
+
+ -l, --level = <value>
+   set the level value
+```
+
+The following is the corresponding interface
+
+```c++
+// set a short otional description for the arguments (imput parameters post
+// options and flags) that is printed in head of the usage() message
+void setUsageArgsDescr (std::string const & ad);
+
+// set an optional initial description that is printed after the head of the
+// usage() message and before the list of the options
+void setUsageInitalDescr (std::string const & id);
+
+// set an optional final description that is printed after the list of the
+// options, at the end of the usage() message
+void setUsageFinalDescr (std::string const & fd);
+
+// set the width (number of columns) available for the usage() message; the
+// default value is 79
+void setUsageWidth (std::size_t uw);
+
+// print the usage() message to the 'os' output stream (the default is
+// std::cerr)
+void usage (std::ostream & os = std::cerr) const
+```
+
+You can see a detailed use example in `examples/yarg-example-003.cpp`.
 
 ### Line command examples
 

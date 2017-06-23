@@ -1,5 +1,5 @@
 
-# Copyright (c) 2016 massimo morara
+# Copyright (c) 2016, 2017 massimo morara
 
 # Distributed under the Mit License
 # See accompanying file LICENSE
@@ -10,11 +10,16 @@ CPPFLAGS  = -c -g -O0 -Wall -Wextra -ansi -pedantic -Wno-unknown-pragmas \
             -std=c++14 -stdlib=libc++ -I. -I../src
 LDFLAGS   = -stdlib=libc++
 EXES      = $(shell ls *.cpp | sed 's/.cpp//')
+YARGH     = ../src/yarg/yarg.h
 
 all: $(EXES)
 
 clean:
 	- rm $(EXES) $(EXES:%=%.o) >& /dev/null
+
+yargDependent = *.o
+
+$(yargDependent): $(YARGH)
 
 %.o: %.cpp Makefile
 	$(CC) -o $@ $(CPPFLAGS) $<

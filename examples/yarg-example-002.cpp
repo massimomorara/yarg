@@ -1,5 +1,5 @@
 
-// Copyright (c) 2016 massimo morara
+// Copyright (c) 2016, 2017 massimo morara
 
 // Distributed under the Mit License
 // See accompanying file LICENSE
@@ -15,13 +15,12 @@ int main (int argc, char * argv[])
 
    try
     {
-      // creation of a yarg instance; no parameter for constructor
+      // creation of a yarg instance; no parameters for constructor
       yarg::yarg  y;
 
       // add a flag (an option without an argument) that can be set with a
       // short option ("-h") and with a long option ("--help") without
-      // expliciting a default value (so the default default value is
-      // "false")
+      // expliciting a default value (so the default value is "false")
       auto & b0 = y.addFlag('h', "help", "some help");
 
       // add another flag that can be set with a long option only
@@ -43,7 +42,7 @@ int main (int argc, char * argv[])
       // add another option of type long expliciting the type (via template
       // argument); the default value is long{} (so 0L); this option can be
       // set only by a short argument (the second parameter is empty)
-      auto & l0 = y.addOpt<long>('o', "", "set a long option only");
+      auto & l0 = y.addOpt<long>('o', "", "set a short option only");
 
       // add a container option (a repeatable option) of type int and store
       // the values in a `std::vector<int>`
@@ -58,11 +57,15 @@ int main (int argc, char * argv[])
       // std::deque<std::string>; can be done post parse()
       auto & args = y.getNoOpts();
 
-      // parse argc and argv; in case of error return false, the parsing
+      // parse argc and argv; in case of error return false; the parsing
       // error (a std::string) can be extract from getParserError()
       if ( false == y.parse(argc, argv) )
+       {
+         y.usage();
+
          throw std::runtime_error("yarg parsing error: " + y.getParserError()
                                   + "]");
+       }
 
       // the name of the program
       std::cout << "argv0 ?   " << argv0 << std::endl;
@@ -90,7 +93,7 @@ int main (int argc, char * argv[])
 
       errExit = false;
     }
-   catch ( std::exception & e )
+   catch ( std::exception const & e )
     {
       std::cerr << "\nmain(): standard exception of type \""
          << typeid(e).name() <<"\"\n"

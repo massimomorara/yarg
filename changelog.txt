@@ -1,4 +1,14 @@
 
+0.2.0 - 2017.06.23
+
+- usage() method added with some help support methods (setUsageArgsDescr(),
+  setUsageInitialDescr(), setUsageFinalDescr(), setUsageWidth())
+- added a third example (yarg-example-003) to show the use of usage()
+  and support methods
+- Makefile for examples improved 
+- minor corrections and minor (mainly aesthetic) changes
+
+
 0.1.1 - 2016.09.21
 
 - regex error corrected

@@ -27,3 +27,9 @@
 *.exe
 *.out
 *.app
+
+# yarg specific
+examples/yarg-example-???
+test/catch.hpp
+test/test_yarg-1?-clang
+test/test_yarg-1?-gcc

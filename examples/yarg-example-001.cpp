@@ -1,5 +1,5 @@
 
-// Copyright (c) 2016 massimo morara
+// Copyright (c) 2016, 2017 massimo morara
 
 // Distributed under the Mit License
 // See accompanying file LICENSE
@@ -18,6 +18,13 @@ int main (int argc, char * argv[])
 
    if ( y.parse(argc, argv) )
       std::cout << "level is " << l << std::endl;
+   else
+    {
+      std::cerr << std::endl << y.getParserError() << std::endl;
+
+      y.usage();
+    }
+
 
    return EXIT_SUCCESS;
  }

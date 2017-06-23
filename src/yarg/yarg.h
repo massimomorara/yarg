@@ -1,7 +1,7 @@
 
 #if 0
 
-Copyright (c) 2016 massimo morara
+Copyright (c) 2016, 2017 massimo morara
 
 Permission is hereby granted, free of charge, to any person obtaining a copy
 of this software and associated documentation files (the "Software"), to deal
@@ -39,6 +39,7 @@ authorization.
 #include <memory>
 #include <string>
 #include <sstream>
+#include <iostream>
 #include <stdexcept>
 #include <type_traits>
 
@@ -47,8 +48,8 @@ namespace yarg
  {
    // see https://github.com/massimomorara/yarg for latest version
    #define  Yarg_Version_Major  0
-   #define  Yarg_Version_Minor  1
-   #define  Yarg_Version_Patch  1
+   #define  Yarg_Version_Minor  2
+   #define  Yarg_Version_Patch  0
 
    template <typename X>
    X extractVal (std::string const & str)
@@ -60,18 +61,18 @@ namespace yarg
       iss >> val;
 
       if ( iss.fail() )
-         throw std::runtime_error(
-            "extractVal(): error reading val [" + iss.str() + "] (from ["
-            + str + "])");
+         throw std::runtime_error {
+              "extractVal(): error reading val [" + iss.str() + "] (from ["
+            + str + "])" };
 
       if ( iss.good() )
        {
          std::string  left { iss.str().substr(iss.tellg()) };
 
          if ( false == left.empty() )
-            throw std::runtime_error(
-               "extractVal(): no empty string left [" + left + "] (from ["
-               + str + "])");
+            throw std::runtime_error {
+                 "extractVal(): no empty string left [" + left + "] (from ["
+               + str + "])" };
        }
 
       return val;
@@ -81,13 +82,11 @@ namespace yarg
    std::string extractVal (std::string const & str)
     { return str; }
 
-   class optBase
+   struct optBase
     { 
-      public:
-
-         virtual void setVal  (std::string const &) = 0;
-         virtual void setBool (bool) = 0;
-         virtual std::size_t getDim () const = 0;
+      virtual void        setVal  (std::string const &) = 0;
+      virtual void        setBool (bool)                = 0;
+      virtual std::size_t getDim  () const              = 0;
     };
 
    template <typename X>
@@ -114,20 +113,20 @@ namespace yarg
           { return val; }
 
          std::size_t getDim () const final
-          { return set ; }
+          { return set; }
 
          void setVal (std::string const & str) final
           { val = extractVal<X>(str); set = true; }
 
          template <typename Y = void>
-            typename std::enable_if<
-            true == std::is_same<X, bool>::value, Y>::type
+         typename std::enable_if<
+               true == std::is_same<X, bool>::value, Y>::type
             setBoolT (bool b)
-             { val = b; set = true; }
+          { val = b; set = true; }
 
          template <typename Y = void>
-            typename std::enable_if<
-            false == std::is_same<X, bool>::value, Y>::type
+         typename std::enable_if<
+               false == std::is_same<X, bool>::value, Y>::type
             setBoolT (bool)
           { }
 
@@ -135,7 +134,7 @@ namespace yarg
           { setBoolT(b); }
     };
 
-   class emptyClass
+   struct emptyStruct
     { };
 
    template <typename ... Ts>
@@ -145,50 +144,50 @@ namespace yarg
    struct funcType<T, Ts...>
     { using type
          = typename std::conditional<T::result,
-            typename T::type, typename funcType<Ts...>::type>::type; };
+              typename T::type, typename funcType<Ts...>::type>::type; };
 
    template <>
    struct funcType<>
-    { using type = emptyClass; };
+    { using type = emptyStruct; };
 
-#define methodCheck_1(meth)                            \
-                                                       \
-   class helpMeth_1_##meth {};                         \
-                                                       \
-   template <typename T, typename A>                   \
-   struct isWithMethod_1_##meth                        \
-    {                                                  \
-      template<typename U>                             \
-      static decltype(U().meth(A())) func (U*);        \
-                                                       \
-      template<typename U>                             \
-      static emptyClass func (...);                    \
-                                                       \
-      static const bool result                         \
-         = ! std::is_same<emptyClass,                  \
-                decltype(func<T>(nullptr))>::value;    \
-                                                       \
-      using  type = helpMeth_1_##meth;                 \
+#define methodCheck_1(meth)                                                 \
+                                                                            \
+   struct helpMeth_1_##meth { };                                            \
+                                                                            \
+   template <typename T, typename A>                                        \
+   struct isWithMethod_1_##meth                                             \
+    {                                                                       \
+      template<typename U>                                                  \
+      static decltype(std::declval<U>().meth(std::declval<A>())) func (U*); \
+                                                                            \
+      template<typename U>                                                  \
+      static emptyStruct func (...);                                        \
+                                                                            \
+      static const bool result                                              \
+         = ! std::is_same<emptyStruct,                                      \
+                decltype(func<T>(nullptr))>::value;                         \
+                                                                            \
+      using  type = helpMeth_1_##meth;                                      \
     }
 
-#define methodCheck_0(meth)                            \
-                                                       \
-   class helpMeth_0_##meth {};                         \
-                                                       \
-   template <typename T>                               \
-   struct isWithMethod_0_##meth                        \
-    {                                                  \
-      template<typename U>                             \
-      static decltype(U().meth()) func (U*);           \
-                                                       \
-      template<typename U>                             \
-      static emptyClass func (...);                    \
-                                                       \
-      static const bool result                         \
-         = ! std::is_same<emptyClass,                  \
-                decltype(func<T>(nullptr))>::value;    \
-                                                       \
-      using  type = helpMeth_0_##meth;                 \
+#define methodCheck_0(meth)                                \
+                                                           \
+   struct helpMeth_0_##meth { };                           \
+                                                           \
+   template <typename T>                                   \
+   struct isWithMethod_0_##meth                            \
+    {                                                      \
+      template<typename U>                                 \
+      static decltype(std::declval<U>().meth()) func (U*); \
+                                                           \
+      template<typename U>                                 \
+      static emptyStruct func (...);                       \
+                                                           \
+      static const bool result                             \
+         = ! std::is_same<emptyStruct,                     \
+                decltype(func<T>(nullptr))>::value;        \
+                                                           \
+      using  type = helpMeth_0_##meth;                     \
     }
 
    methodCheck_1(insert);
@@ -216,10 +215,10 @@ namespace yarg
          using sizeModeType = typename funcType<
             isWithMethod_0_size<C<X, Xs...>>>::type;
 
-         static constexpr addModeType2  addMode {};
-         static constexpr sizeModeType  sizeMode {};
+         static constexpr addModeType2  addMode { };
+         static constexpr sizeModeType  sizeMode { };
 
-         C<X, Xs...> val {};
+         C<X, Xs...> val { };
 
          void addVal (std::string const & s, helpMeth_1_push_back const)
           { val.push_back(extractVal<X>(s)); }
@@ -233,15 +232,15 @@ namespace yarg
          void addVal (std::string const & s, helpMeth_1_push_front const)
           { val.push_front(extractVal<X>(s)); }
 
-         void addVal (std::string const & s, emptyClass const)
-          { throw std::runtime_error("optC<>::addVal without mode for value"
-                                     " ["+s+"]"); }
+         void addVal (std::string const & s, emptyStruct const)
+          { throw std::runtime_error { "optC<>::addVal without mode for"
+                                       " value [" + s + "]" }; }
 
          std::size_t getDim (helpMeth_0_size const) const
           { return val.size(); }
 
-         std::size_t getDim (emptyClass const) const
-          { return std::distance(val.begin(), val.end()); }
+         std::size_t getDim (emptyStruct const) const
+          { return std::distance(val.cbegin(), val.cend()); }
 
       public:
          optC ()
@@ -280,7 +279,7 @@ namespace yarg
           { }
 
          optC (std::array<X, N> const & v0, std::size_t p0)
-            : val(v0), pos { p0 }
+            : val { v0 }, pos { p0 }
           { }
 
          std::array<X, N> const & getVal () const
@@ -305,7 +304,6 @@ namespace yarg
 
          char const                so;
          std::string const         lo;
-         std::string const         descr;
          bool const                opt;
          bool const                rev;
 
@@ -314,11 +312,10 @@ namespace yarg
 
       public:
 
-         yData (char so0, std::string const & lo0,
-                std::string const & descr0, bool opt0, bool rev0,
+         yData (char so0, std::string const & lo0, bool opt0, bool rev0,
                 std::unique_ptr<optBase> optB0)
-            : so { so0 }, lo { lo0 }, descr { descr0 }, opt { opt0 },
-               rev { rev0 }, fnd { false }, optB { std::move(optB0) }
+            : so { so0 }, lo { lo0 }, opt { opt0 }, rev { rev0 },
+              fnd { false }, optB { std::move(optB0) }
           { }
 
          char getShortOption () const
@@ -326,9 +323,6 @@ namespace yarg
 
          std::string const & getLongOption () const
           { return lo; }
-
-         std::string const & getDescr () const
-          { return descr; }
 
          bool isOption () const
           { return opt; }
@@ -350,46 +344,82 @@ namespace yarg
     {
       private:
 
-         int  nextId { std::numeric_limits<char>::max() };
+         using hRow = std::pair<std::size_t, std::string>; // rows of help
 
-         std::string                 argv0;
-         std::string                 errParse;
+         int          nextId { std::numeric_limits<char>::max() };
+         std::size_t  usageW { 79U };
+
+         std::string  argsD;
+         std::string  initialD;
+         std::string  finalD;
+         std::string  argv0;
+         std::string  errParse;
+
          std::map<std::string, int>  loMap;
          std::map<std::string, int>  loNoMap;
          std::map<int, yData>        idMap;
          std::deque<std::string>     noOpts;
+         std::deque<hRow>            optH;
 
+
+         static void usageLine (std::size_t numW, std::string const & ur,
+                                std::size_t usageW, 
+                                std::ostream & os = std::cerr)
+          {
+            std::size_t const wdt { usageW - numW - 1U };
+
+            if ( wdt > usageW )
+               throw std::runtime_error { "usageLine(): width too short" };
+
+            std::string        tk;
+            std::istringstream iss { ur };
+
+            for ( std::size_t pos { 0U } ; iss >> tk ; pos += tk.size() )
+             {
+               if ( usageW <= pos + tk.size() )
+                  pos = 0U, os << '\n';
+
+               if ( 0U == pos )
+                  os << std::string(pos = numW, ' ');
+               else
+                  ++pos, os << ' ';
+
+               os << tk;
+             }
+
+            os << '\n';
+          }
 
          int prepareOption (char so, std::string const & lo,
                             bool revert = false)
           {
-            int  id { int(so) };
+            int  id { int{so} };
 
             if ( 0 == id )
              {
                if ( lo.empty() )
-                  throw std::runtime_error("prepareOption(): no options");
+                  throw std::runtime_error { "prepareOption(): no options" };
 
                id = ++nextId;
              }
             else if ( idMap.count(id) )
-               throw std::runtime_error("prepareOption(): double short"
-                                        " option [" + std::to_string(id)
-                                        + "]");
+               throw std::runtime_error {   "prepareOption(): double short"
+                                            " option [" + std::to_string(id)
+                                          + "]" };
 
             if ( false == lo.empty() )
              {
                if ( loMap.count(lo) )
-                  throw std::runtime_error(
+                  throw std::runtime_error {
                      "prepareOption(): long options collision ["
-                     + std::to_string(id) + "]");
+                     + std::to_string(id) + "]" };
 
                if ( revert )
                 {
                   if ( loMap.count("no"+lo) )
-                     throw std::runtime_error(
-                        "prepareOption(): revert long options collision ["
-                        + std::to_string(id) + "]");
+                     throw std::runtime_error {
+                          "prepareOption(): revert long options collision ["
+                        + std::to_string(id) + "]" };
 
                   loNoMap.emplace("no"+lo, id);
                 }
@@ -397,30 +427,40 @@ namespace yarg
                loMap.emplace(lo, id);
              }
             else if ( revert )
-               throw std::runtime_error(
-                  "prepareOption(): no long options to revert ["
-                  + std::to_string(id) + "]");
+               throw std::runtime_error {
+                    "prepareOption(): no long options to revert ["
+                  + std::to_string(id) + "]" };
 
             return id;
           }
 
-      public:
-
-         template <typename T>
-         T & addOpt (char so, std::string const & lo,
-                     std::string const & descr = "", T const &  def = T())
+         void addOptDescr (char so, std::string const & lo,
+                           std::string const & descr, bool isFlag,
+                           bool revert, bool repeat)
           {
-            int id { prepareOption(so, lo) };
+            std::string  line;
 
-            opt<T> * optP { nullptr };
+            if ( so )
+               line.append(1U, '-').append(1U, so);
 
-            idMap.emplace(std::piecewise_construct,
-                  std::forward_as_tuple(id),
-                  std::forward_as_tuple(so, lo, descr, true, false,
-                     std::unique_ptr<optBase>(optP = new opt<T>(def))));
+            if ( lo.size() )
+               line.append( line.size() ? ", " : "" ).append("--")
+                  +=   lo + ( isFlag ? "" : " = <value>" )
+                     + ( revert ? ", --no"+lo+" to negate" : "" );
+            else if ( false == isFlag )
+               line += " = <value>";
 
-            return optP->getVal();
+            if ( repeat )
+               line += ", repeatable";
+
+            optH.emplace_back(0U, "");
+            optH.emplace_back(1U, line);
+
+            if ( descr.size() )
+               optH.emplace_back(3U, descr);
           }
+
+      public:
 
          bool & addFlag (char so, std::string const & lo,
                          std::string const & descr = "", bool revert = false,
@@ -430,26 +470,12 @@ namespace yarg
 
             opt<bool> * optP { nullptr };
 
+            addOptDescr(so, lo, descr, true, revert, false);
+
             idMap.emplace(std::piecewise_construct,
                   std::forward_as_tuple(id),
-                  std::forward_as_tuple(so, lo, descr, false, revert,
-                     std::unique_ptr<optBase>(optP = new opt<bool>(def))));
-
-            return optP->getVal();
-          }
-
-         template <typename T>
-         T & addOptCont (char so, std::string const & lo,
-                         std::string const & descr = "", T const & def = T())
-          {
-            int id { prepareOption(so, lo) };
-
-            optC<T> * optP { nullptr };
-
-            idMap.emplace(std::piecewise_construct,
-               std::forward_as_tuple(id),
-               std::forward_as_tuple(so, lo, descr, true, false,
-                  std::unique_ptr<optBase>(optP = new optC<T>(def))));
+                  std::forward_as_tuple(so, lo, false, revert,
+                     std::unique_ptr<optBase>{ optP = new opt<bool>{def} }));
 
             return optP->getVal();
           }
@@ -457,16 +483,54 @@ namespace yarg
          template <typename T>
          T & addFlagCont (char so, std::string const & lo,
                           std::string const & descr = "",
-                          bool revert = false, T const & def = T())
+                          bool revert = false, T const & def = T{})
           {
             int id { prepareOption(so, lo, revert) };
 
             optC<T> * optP { nullptr };
 
+            addOptDescr(so, lo, descr, true, revert, true);
+
             idMap.emplace(std::piecewise_construct,
                std::forward_as_tuple(id),
-               std::forward_as_tuple(so, lo, descr, false, revert,
-                  std::unique_ptr<optBase>(optP = new optC<T>(def))));
+               std::forward_as_tuple(so, lo, false, revert,
+                  std::unique_ptr<optBase>{ optP = new optC<T>{def} }));
+
+            return optP->getVal();
+          }
+
+         template <typename T>
+         T & addOpt (char so, std::string const & lo,
+                     std::string const & descr = "", T const &  def = T{})
+          {
+            int id { prepareOption(so, lo) };
+
+            opt<T> * optP { nullptr };
+
+            addOptDescr(so, lo, descr, false, false, false);
+
+            idMap.emplace(std::piecewise_construct,
+                  std::forward_as_tuple(id),
+                  std::forward_as_tuple(so, lo, true, false,
+                     std::unique_ptr<optBase>{ optP = new opt<T>{def} }));
+
+            return optP->getVal();
+          }
+
+         template <typename T>
+         T & addOptCont (char so, std::string const & lo,
+                         std::string const & descr = "", T const & def = T{})
+          {
+            int id { prepareOption(so, lo) };
+
+            optC<T> * optP { nullptr };
+
+            addOptDescr(so, lo, descr, false, false, true);
+
+            idMap.emplace(std::piecewise_construct,
+               std::forward_as_tuple(id),
+               std::forward_as_tuple(so, lo, true, false,
+                  std::unique_ptr<optBase>{ optP = new optC<T>{def} }));
 
             return optP->getVal();
           }
@@ -489,9 +553,9 @@ namespace yarg
                errParse.clear();
 
                if ( 1 > argc )
-                  throw std::runtime_error("parse(): no args");
+                  throw std::runtime_error { "parse(): no args" };
 
-               noOpts = std::deque<std::string>(argv, argv+argc);
+               noOpts = std::deque<std::string> { argv, argv+argc };
                argv0  = noOpts.front();
 
                noOpts.pop_front();
@@ -529,14 +593,14 @@ namespace yarg
                    {
                      int  ch;
 
-                     itMap = idMap.find(ch=sOpts.front());
+                     itMap = idMap.find( ch = sOpts.front() );
 
                      sOpts.pop_front();
 
                      if ( idMap.end() == itMap )
-                        throw std::runtime_error(
-                           "parse(): unrecognized short option ["
-                           +(std::string()+=char(ch))+"]");
+                        throw std::runtime_error {
+                             "parse(): unrecognized short option ["
+                           + (std::string()+=char(ch)) + "]" };
                    }
                   else if ( mm == noOpts.front() )
                    {
@@ -544,8 +608,8 @@ namespace yarg
 
                      loop = false;
                    }
-                  else if ( std::equal(mm.begin(), mm.end(),
-                                       noOpts.front().begin()) )
+                  else if ( std::equal(mm.cbegin(), mm.cend(),
+                                       noOpts.front().cbegin()) )
                    {
                      std::smatch srgx;
 
@@ -555,12 +619,12 @@ namespace yarg
 
                      std::regex_search(savStrKey, srgx, rgxKey);
 
-                     for ( unsigned i = 1U ; i < srgx.size() ; ++i )
+                     for ( std::size_t i { 1U } ; i < srgx.size() ; ++i )
                         if ( srgx[i].matched )
                            vssm.push_back(srgx[i]);
 
                      if ( 0U == vssm.size() )
-                        throw std::runtime_error("parse(): no key match");
+                        throw std::runtime_error { "parse(): no key match" };
 
                      longO = vssm.front().str();
 
@@ -574,21 +638,21 @@ namespace yarg
                         itLoMap = loNoMap.find(longO);
 
                         if ( loNoMap.cend() == itLoMap )
-                           throw std::runtime_error(
-                              "parse(): unrecognized long option ["+longO
-                              +"]");
+                           throw std::runtime_error {
+                                "parse(): unrecognized long option [" + longO
+                              + "]" };
                       }
 
                      itMap = idMap.find(itLoMap->second);
 
                      if ( idMap.end() == itMap )
-                        throw std::runtime_error(
-                           "parse(): long option mismatch");
+                        throw std::runtime_error {
+                           "parse(): long option mismatch" };
                    }
                   else if ( '-' == noOpts.front().at(0U) )
                    {
-                     sOpts = std::deque<int>(noOpts.front().cbegin(),
-                                             noOpts.front().cend());
+                     sOpts = std::deque<int> { noOpts.front().cbegin(),
+                                               noOpts.front().cend() };
 
                      noOpts.pop_front();
                      sOpts.pop_front(); // remove '-'
@@ -598,14 +662,15 @@ namespace yarg
 
                   if ( idMap.end() != itMap )
                    {
-                     if (    (true == revert)
+                     if (   (true == revert)
                          && (false == itMap->second.isReversible()) )
-                        throw std::runtime_error(
-                           "parse(): revert option mismatch");
+                        throw std::runtime_error {
+                           "parse(): revert option mismatch" };
 
                      if (   (false == vssm.empty() )
                          && (false == itMap->second.isOption()) )
-                        throw std::runtime_error("parse(): value for flag");
+                        throw std::runtime_error {
+                           "parse(): value for flag" };
 
                      if ( false == itMap->second.isOption() )
                         itMap->second.getPnt()->setBool( ! revert );
@@ -614,8 +679,8 @@ namespace yarg
                         if ( vssm.empty() )
                          {
                            if ( noOpts.empty() )
-                              throw std::runtime_error(
-                                 "parse(): no value for param");
+                              throw std::runtime_error {
+                                 "parse(): no value for param" };
 
                            savStrValue = noOpts.front();
 
@@ -625,16 +690,16 @@ namespace yarg
 
                            std::regex_search(savStrValue, srgx, rgxValue);
 
-                           for ( unsigned i = 1U ; i < srgx.size() ; ++i )
+                           for ( std::size_t i {1U} ; i < srgx.size() ; ++i )
                               if ( srgx[i].matched )
                                  vssm.push_back(srgx[i]);
                          }
 
                         if ( 1U != vssm.size() )
-                           throw std::runtime_error(
-                              "parse(): number of values mismatch (1"
-                              " awaited, "+std::to_string(vssm.size())
-                              +" received)");
+                           throw std::runtime_error {
+                                "parse(): number of values mismatch (1"
+                                " awaited, " + std::to_string(vssm.size())
+                              + " received)" };
 
                         itMap->second.getPnt()->setVal(vssm.front().str());
                       }
@@ -646,19 +711,46 @@ namespace yarg
                ret = true;
              }
             catch ( std::exception const & exc )
-             {
-               errParse = "yarg parser error: [" + std::string(exc.what())
-                  + "]";
-             }
+             { errParse = "yarg parser error: [" + std::string{ exc.what() }
+                  + "]"; }
             catch ( ... ) 
-             {
-               errParse = "yarg parser not standard";
-             }
+             { errParse = "yarg parser not standard"; }
 
             return ret;
           }
-    };
 
+         void setUsageArgsDescr (std::string const & ad)
+          { argsD = ad; }
+
+         void setUsageFinalDescr (std::string const & fd)
+          { finalD = fd; }
+
+         void setUsageInitialDescr (std::string const & id)
+          { initialD = id; }
+
+         void setUsageWidth (std::size_t uw)
+          { usageW = uw; }
+
+         void usage (std::ostream & os = std::cerr) const
+          {
+            os << "\n Usage: " << argv0 << (optH.empty() ? "" : " [options]")
+               << ' ' << argsD << '\n';
+
+            if ( false == initialD.empty() )
+               os << '\n', usageLine(1U, initialD, usageW, os);
+
+            if ( false == optH.empty() )
+               os << "\n where options are\n";
+
+            for ( auto const & p : optH )
+               usageLine(p.first, p.second, usageW, os);
+
+            if ( false == finalD.empty() )
+               os << '\n', usageLine(1U, finalD, usageW, os);
+
+            os << std::endl;
+          }
+    };
  }
 
 #endif // ndef __yarg_h__
