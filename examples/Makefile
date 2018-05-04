@@ -1,5 +1,5 @@
 
-# Copyright (c) 2016, 2017 massimo morara
+# Copyright (c) 2016-2018 massimo morara
 
 # Distributed under the Mit License
 # See accompanying file LICENSE
@@ -15,7 +15,7 @@ YARGH     = ../src/yarg/yarg.h
 all: $(EXES)
 
 clean:
-	- rm $(EXES) $(EXES:%=%.o) >& /dev/null
+	- rm $(EXES) $(EXES:%=%.o) > /dev/null 2>&1
 
 yargDependent = *.o
 

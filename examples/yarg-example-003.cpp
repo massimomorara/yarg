@@ -1,5 +1,5 @@
 
-// Copyright (c) 2016, 2017 massimo morara
+// Copyright (c) 2016-2018 massimo morara
 
 // Distributed under the Mit License
 // See accompanying file LICENSE.txt

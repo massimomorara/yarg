@@ -1,5 +1,5 @@
 
-# Copyright (c) 2016, 2017 massimo morara
+# Copyright (c) 2016-2018 massimo morara
 
 # Distributed under the Mit License
 # See accompanying file LICENSE
@@ -33,7 +33,7 @@ all: $(TESTS_11_GCC) $(TESTS_11_CLANG) $(TESTS_14_GCC) $(TESTS_14_CLANG)
 clean:
 	- rm $(TESTS_11_GCC) $(TESTS_11_GCC:%=%.o) $(TESTS_11_CLANG) \
 	     $(TESTS_11_CLANG:%=%.o) $(TESTS_14_GCC) $(TESTS_14_GCC:%=%.o) \
-	     $(TESTS_14_CLANG) $(TESTS_14_CLANG:%=%.o) >& /dev/null
+	     $(TESTS_14_CLANG) $(TESTS_14_CLANG:%=%.o) > /dev/null 2>&1
 
 $(TESTS_11_GCC):%: %.o test-base-11-gcc.o $(COMMON_DEPS)	
 	$(CPP_GCC) -o $@ $(LDFLAGS_11_GCC) test-base-11-gcc.o $<

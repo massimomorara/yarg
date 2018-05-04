@@ -1,7 +1,7 @@
 
 #if 0
 
-Copyright (c) 2016, 2017 massimo morara
+Copyright (c) 2016-2018 massimo morara
 
 Permission is hereby granted, free of charge, to any person obtaining a copy
 of this software and associated documentation files (the "Software"), to deal
@@ -49,7 +49,7 @@ namespace yarg
    // see https://github.com/massimomorara/yarg for latest version
    #define  Yarg_Version_Major  0
    #define  Yarg_Version_Minor  2
-   #define  Yarg_Version_Patch  0
+   #define  Yarg_Version_Patch  1
 
    template <typename X>
    X extractVal (std::string const & str)
@@ -134,69 +134,6 @@ namespace yarg
           { setBoolT(b); }
     };
 
-   struct emptyStruct
-    { };
-
-   template <typename ... Ts>
-   struct funcType;
-
-   template <typename T, typename ... Ts>
-   struct funcType<T, Ts...>
-    { using type
-         = typename std::conditional<T::result,
-              typename T::type, typename funcType<Ts...>::type>::type; };
-
-   template <>
-   struct funcType<>
-    { using type = emptyStruct; };
-
-#define methodCheck_1(meth)                                                 \
-                                                                            \
-   struct helpMeth_1_##meth { };                                            \
-                                                                            \
-   template <typename T, typename A>                                        \
-   struct isWithMethod_1_##meth                                             \
-    {                                                                       \
-      template<typename U>                                                  \
-      static decltype(std::declval<U>().meth(std::declval<A>())) func (U*); \
-                                                                            \
-      template<typename U>                                                  \
-      static emptyStruct func (...);                                        \
-                                                                            \
-      static const bool result                                              \
-         = ! std::is_same<emptyStruct,                                      \
-                decltype(func<T>(nullptr))>::value;                         \
-                                                                            \
-      using  type = helpMeth_1_##meth;                                      \
-    }
-
-#define methodCheck_0(meth)                                \
-                                                           \
-   struct helpMeth_0_##meth { };                           \
-                                                           \
-   template <typename T>                                   \
-   struct isWithMethod_0_##meth                            \
-    {                                                      \
-      template<typename U>                                 \
-      static decltype(std::declval<U>().meth()) func (U*); \
-                                                           \
-      template<typename U>                                 \
-      static emptyStruct func (...);                       \
-                                                           \
-      static const bool result                             \
-         = ! std::is_same<emptyStruct,                     \
-                decltype(func<T>(nullptr))>::value;        \
-                                                           \
-      using  type = helpMeth_0_##meth;                     \
-    }
-
-   methodCheck_1(insert);
-   methodCheck_1(push);
-   methodCheck_1(push_back);
-   methodCheck_1(push_front);
-
-   methodCheck_0(size);
-
    template <typename X>
    class optC;
 
@@ -206,40 +143,50 @@ namespace yarg
     {
       private:
 
-         using addModeType2 = typename funcType<
-            isWithMethod_1_push_back<C<X, Xs...>, X>,
-            isWithMethod_1_insert<C<X, Xs...>, X>,
-            isWithMethod_1_push<C<X, Xs...>, X>,
-            isWithMethod_1_push_front<C<X, Xs...>, X>>::type;
+         using cType = C<X, Xs...>;
 
-         using sizeModeType = typename funcType<
-            isWithMethod_0_size<C<X, Xs...>>>::type;
+         // choiche level: see https://blog.rmf.io/cxx11/overload-ranking
+         using choiche_0 = int &&;
+         using choiche_1 = int const &&;
+         using choiche_2 = int const volatile &&;
+         using choiche_3 = int const &;
+         using choiche_4 = long &&;
+         using choiche_5 = long const &&;
+         using choiche_6 = long const volatile &&;
+         using choiche_7 = long const &;
 
-         static constexpr addModeType2  addMode { };
-         static constexpr sizeModeType  sizeMode { };
+         cType val { };
 
-         C<X, Xs...> val { };
-
-         void addVal (std::string const & s, helpMeth_1_push_back const)
+         template <typename D = cType>
+         auto addValHelper (std::string const & s, choiche_0)
+            -> decltype((void)std::declval<D>().push_back(extractVal<X>(s)))
           { val.push_back(extractVal<X>(s)); }
 
-         void addVal (std::string const & s, helpMeth_1_push const)
-          { val.push(extractVal<X>(s)); }
-
-         void addVal (std::string const & s, helpMeth_1_insert const)
+         template <typename D = cType>
+         auto addValHelper (std::string const & s, choiche_1)
+            -> decltype((void)std::declval<D>().insert(extractVal<X>(s)))
           { val.insert(extractVal<X>(s)); }
 
-         void addVal (std::string const & s, helpMeth_1_push_front const)
+         template <typename D = cType>
+         auto addValHelper (std::string const & s, choiche_2)
+            -> decltype((void)std::declval<D>().push(extractVal<X>(s)))
+          { val.push(extractVal<X>(s)); }
+
+         template <typename D = cType>
+         auto addValHelper (std::string const & s, choiche_3)
+            -> decltype((void)std::declval<D>().push_front(extractVal<X>(s)))
           { val.push_front(extractVal<X>(s)); }
 
-         void addVal (std::string const & s, emptyStruct const)
+         void addValHelper (std::string const & s, ...)
           { throw std::runtime_error { "optC<>::addVal without mode for"
                                        " value [" + s + "]" }; }
 
-         std::size_t getDim (helpMeth_0_size const) const
+         template <typename D = cType>
+         auto getDimHelper (choiche_0) const
+            -> decltype( std::declval<D>().size(), std::size_t{} )
           { return val.size(); }
 
-         std::size_t getDim (emptyStruct const) const
+         std::size_t getDimHelper (...) const
           { return std::distance(val.cbegin(), val.cend()); }
 
       public:
@@ -257,10 +204,10 @@ namespace yarg
           { return val; }
 
          std::size_t getDim () const final
-          { return getDim(sizeMode); }
+          { return getDimHelper(0); }
 
          void setVal (std::string const & s) final
-          { addVal(s, addMode); }
+          { addValHelper(s, 0); }
 
          void setBool (bool) final
           { }
@@ -275,6 +222,7 @@ namespace yarg
          std::size_t      pos { 0 };
 
       public:
+
          optC ()
           { }
 

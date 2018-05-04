@@ -1,4 +1,12 @@
 
+0.2.1 - 2017.05.04
+- correction in Makefile's "clean" targets (to work also with shell sh)
+- substituted ugly macros in yarg.h with ordered overload resolution for
+  insertion of elements and size detection in containers (no behaviour
+  changes for yarg class)
+- minor corrections and minor (mainly aesthetic) changes
+
+
 0.2.0 - 2017.06.23
 
 - usage() method added with some help support methods (setUsageArgsDescr(),
